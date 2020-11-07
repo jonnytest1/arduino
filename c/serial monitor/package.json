@@ -1,0 +1,7 @@
+{
+    "name": "serialporttest",
+    "dependencies": {
+        "@types/node": "^14.11.8",
+        "serialport": "^9.0.1"
+    }
+}
