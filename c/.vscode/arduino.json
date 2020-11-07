@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "programmer": "Parallel Programmer",
+    "port": "COM3",
+    "sketch": "uno\\log.ino"
+}
