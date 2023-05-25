@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "PlatformIO",
+            "task": "Pre-Debug (test)",
+            "problemMatcher": [
+                "$platformio"
+            ],
+            "label": "PlatformIO: Pre-Debug (test)"
+        },
+        {
+            "label": "run watcher",
+            "type": "shell",
+            "command": "exit 1",
+            "windows": {
+                "command": "python ./filewatcher/watchchanges.py"
+            },
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "runOptions": {
+                "runOn": "folderOpen",
+            }
+        },
+    ]
+}
