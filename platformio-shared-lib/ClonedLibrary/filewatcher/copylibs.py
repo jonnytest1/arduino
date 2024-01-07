@@ -23,11 +23,14 @@ def copy_all():
                 os.path.join(workspaceFolderPath, "src\\lib"))
             if (os.path.exists(platformIniPath) and libsLocation.lower() not in libDirectory.lower()):
                 if (os.path.exists(libDirectory)):
-                    shutil.rmtree(libDirectory)
+                    try:
+                        shutil.rmtree(libDirectory)
+                    except:
+                        pass
 
                 copy_to_workspace(workspaceFolderPath, libDirectory)
 
-  
+
 def copy_to_workspace(workspaceFolderPath, libDirectory):
     os.mkdir(libDirectory)
 
