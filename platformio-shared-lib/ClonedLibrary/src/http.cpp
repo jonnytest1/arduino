@@ -21,6 +21,7 @@ void HttpServer::step()
 {
     if (WiFi.status() != WL_CONNECTED)
     {
+        Serial.println("awaiting wifi");
         waitForWifi();
     }
     WiFiClient client = wifiServer.available();

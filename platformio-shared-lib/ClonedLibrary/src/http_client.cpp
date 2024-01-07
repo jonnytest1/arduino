@@ -7,57 +7,60 @@ HttpClientRequest::HttpClientRequest()
 }
 HttpClientRequest::HttpClientRequest(std::string reqUrl)
 {
-    url = reqUrl;
+  url = reqUrl;
 }
 
 void HttpClientRequest::addHeader(std::string key, std::string value)
 {
-    std::pair<std::string, std::string> pair(key, value);
-    headers.insert(pair);
+  std::pair<std::string, std::string> pair(key, value);
+  headers.insert(pair);
 }
 void HttpClientRequest::jsonBody(std::string json)
 {
-    std::pair<std::string, std::string> pair("content-type", "application/json");
-    headers.insert(pair);
+  std::pair<std::string, std::string> pair("content-type", "application/json");
+  headers.insert(pair);
 
-    body = json;
+  body = json;
 }
 
 void HttpClientRequest::txtBody(std::string txt)
 {
-    addHeader("content-type", "text/plain");
+  addHeader("content-type", "text/plain");
 
-    body = txt;
+  body = txt;
 }
 void HttpClientRequest::send()
 {
-    waitForWifi();
-    HTTPClient httpf;
-    httpf.begin(toArduinoString(url.c_str()));
+  waitForWifi();
+  HTTPClient httpf;
 
-    for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+  Serial.print("reuqest to");
+  Serial.println(url.c_str());
+  httpf.begin(toArduinoString(url.c_str()));
+
+  for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+  {
+    httpf.addHeader(toArduinoString(it->first), toArduinoString(it->second));
+  }
+
+  String reqBody = body.c_str();
+  Serial.println(reqBody);
+
+  int httpCodef = httpf.sendRequest(method.c_str(), reqBody);
+
+  if (httpCodef > 0)
+  {
+
+    Serial.printf("[HTTP] resppnse code: %d\n", httpCodef);
+    if (callback != NULL)
     {
-        httpf.addHeader(toArduinoString(it->first), toArduinoString(it->second));
+      responseBody = httpf.getString().c_str();
+      callback(this, httpCodef, responseBody);
     }
-
-    String reqBody = body.c_str();
-    Serial.println(reqBody);
-
-    int httpCodef = httpf.sendRequest(method.c_str(), reqBody);
-
-    if (httpCodef > 0)
-    {
-
-        Serial.printf("[HTTP] resppnse code: %d\n", httpCodef);
-        if (callback != NULL)
-        {
-            responseBody = httpf.getString().c_str();
-            callback(this, httpCodef, responseBody);
-        }
-    }
-    else
-    {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", httpf.errorToString(httpCodef).c_str());
-    }
-    httpf.end();
+  }
+  else
+  {
+    Serial.printf("[HTTP] GET... failed, error: %s\n", httpf.errorToString(httpCodef).c_str());
+  }
+  httpf.end();
 }
