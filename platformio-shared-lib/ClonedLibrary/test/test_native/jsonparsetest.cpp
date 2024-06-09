@@ -192,22 +192,23 @@ void runBTest()
   char byteStr[] = "LSS";
   std::string byteString = byteStr;
 
-  str_replace_all(byteString, "S", shortHigh);
-  str_replace_all(byteString, "L", longHigh);
+  auto byteStringSrepl = str_replace_all(byteString, "S", shortHigh);
+  auto byteStringLrepl = str_replace_all(byteStringSrepl, "L", longHigh);
 
-  double size = byteString.length();
+  double size = byteStringLrepl.length();
   int bufferSize = ceil(size / 8);
 
   uint8_t customBuffer[bufferSize];
 
   for (int i = 0; i < bufferSize; i++)
   {
-    std::string substr = sub_string(byteString, i * 8, (i * 8) + 8);
+    std::string substr = sub_string(byteStringLrepl, i * 8, (i * 8) + 8);
     int num = strtol(substr.c_str(), nullptr, 2);
+    int subLength = substr.length();
 
-    if (substr.length() == 4)
+    if (num < 128)
     {
-      num << 4;
+      num = num << 4;
     }
 
     customBuffer[i] = num;

@@ -14,7 +14,7 @@
             "type": "shell",
             "command": "exit 1",
             "windows": {
-                "command": "python ./filewatcher/watchchanges.py"
+                "command": "C:\\\\\\\\Python39\\\\\\\\python.exe ./filewatcher/watchchanges.py"
             },
             "group": "none",
             "presentation": {
