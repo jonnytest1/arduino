@@ -1,10 +1,10 @@
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(19200);
-  Serial.println("sdgfsdg");
+  Serial.begin(9600);
+  Serial.println("initialized");
 }
 
 void loop() {
-  Serial.println("loop2");
+  //Serial.println("loop2");
 }

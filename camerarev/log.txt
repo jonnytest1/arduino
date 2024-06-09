@@ -1,0 +1,53 @@
+printenv
+
+19:08:58.741 -> baudrate=115200
+19:08:58.775 -> ethaddr=00:9A:9B:9C:9D:9E
+19:08:58.775 -> netmask=255.255.255.0
+19:08:58.775 -> set_led_gpio7_5=mw 0x200F00F4 0x01
+19:08:58.775 -> set_led_gpio7_3=mw 0x200F00EC 0x01
+19:08:58.775 -> set_led_gpio_dir=mw 0x201b0400 0x28
+19:08:58.775 -> set_led_gpio_enable=mw 0x201b00a0 0xFF
+19:08:58.775 -> bootcmd=${set_led_gpio7_3}; ${set_led_gpio7_5}; ${set_led_gpio_dir}; ${set_led_gpio_enable};sf probe 0;sf read 0x82000000 0x100000 0x280000;sf read 0x81700000 0x380000 0x600000;bootm 0x82000000 0x81700000;
+19:08:58.809 -> bootdelay=10
+19:08:58.809 -> bootargs="mem=43M console=ttyAMA0,115200 root=0100 init=/linuxrc mtdparts=hi_sfc:192K(uboot),64K(env),64K(user),704K(conf),2560K(kernel),9216K(rootfs),3584K(custom) ramdisk_size=5248"
+19:08:58.809 -> ipaddr=192.168.178.87
+19:08:58.809 -> serverip=192.168.178.48
+19:08:58.809 -> gatewayip=192.168.178.36
+19:08:58.809 -> stdin=serial
+19:08:58.809 -> stdout=serial
+19:08:58.809 -> stderr=serial
+19:08:58.809 -> verify=n
+19:08:58.809 -> ver=U-Boot 2010.06-dirty (Jul 22 2017 - 16:31:28)
+
+
+19:08:58.843 -> hisilicon # help
+19:11:15.597 -> ?       - alias for 'help'
+19:11:15.597 -> base    - print or set address offset
+19:11:15.597 -> bootm   - boot application image from memory
+19:11:15.597 -> bootp   - boot image via network using BOOTP/TFTP protocol
+19:11:15.597 -> cmp     - memory compare
+19:11:15.597 -> cp      - memory copy
+19:11:15.597 -> crc32   - checksum calculation
+19:11:15.597 -> ddr     - ddr training function
+19:11:15.597 -> getinfo - print hardware information
+19:11:15.631 -> go      - start application at address 'addr'
+19:11:15.631 -> help    - print command description/usage
+19:11:15.631 -> loadb   - load binary file over serial line (kermit mode)
+19:11:15.631 -> loady   - load binary file over serial line (ymodem mode)
+19:11:15.631 -> loop    - infinite loop on address range
+19:11:15.631 -> md      - memory display
+19:11:15.631 -> mii     - MII utility commands
+19:11:15.631 -> mm      - memory modify (auto-incrementing address)
+19:11:15.665 -> mtest   - simple RAM read/write test
+19:11:15.665 -> mw      - memory write (fill)
+19:11:15.665 -> nm      - memory modify (constant address)
+19:11:15.665 -> ping    - send ICMP ECHO_REQUEST to network host
+19:11:15.665 -> printenv- print environment variables
+19:11:15.665 -> rarpboot- boot image via network using RARP/TFTP protocol
+19:11:15.665 -> reset   - Perform RESET of the CPU
+19:11:15.665 -> saveenv - save environment variables to persistent storage
+19:11:15.665 -> setenv  - set environment variables
+19:11:15.700 -> sf      - SPI flash sub-system
+19:11:15.700 -> tftp    - tftp	- download or upload image via network using TFTP protocol
+19:11:15.700 -> version - print monitor version
+

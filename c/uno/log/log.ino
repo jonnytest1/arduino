@@ -1,20 +1,23 @@
 void setup()
 {
     // put your setup code here, to run once:
-    Serial.begin(9600);
+    Serial.begin(115200);  
+    Serial.println("init");
 }
 
 int incomingByte = 0;
 
 void loop()
 {
-    Serial.println("test2");
+  
 
     incomingByte = Serial.read();
-
-    // say what you got:
-    Serial.print("I received: ");
-    Serial.println(incomingByte, DEC);
-
-    delay(1000);
+    if(incomingByte!=-1){
+      
+        // say what you got:
+        //Serial.print(incomingByte);
+        //Serial.print((byte) incomingByte);  // print the byte we received as a decimal value
+        //Serial.print(" --> ");
+        Serial.print((char) incomingByte);
+    }
 }

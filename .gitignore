@@ -4,3 +4,4 @@ Elegoo The Most Complete Starter Kit for MEGA2560 V2.0.2020.5.29
 node_modules
 c/.vscode/c_cpp_properties.json
 platformio-shared-lib/ClonedLibrary/filewatcher/__pycache__
+twatchs3/TTGO_TWatch_Library-t-watch-s3/*
