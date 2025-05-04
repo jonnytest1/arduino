@@ -360,8 +360,9 @@ std::string stringify(JsonNode node)
     std::string qrepl = str_replace_all(srepl, "\"", "\\\"");
     std::string nrepl = str_replace_all(qrepl, "\n", "\\n");
     std::string trepl = str_replace_all(nrepl, "\t", "\\t");
+    std::string rrepl = str_replace_all(trepl, "\r", "\\r");
 
-    return "\"" + trepl + "\"";
+    return "\"" + rrepl + "\"";
   }
   else if (node.isObject)
   {

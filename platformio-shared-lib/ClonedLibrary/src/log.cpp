@@ -12,6 +12,29 @@ void logResponse(HttpClientRequest *request, int status, std::string response)
   Serial.println(response.c_str());
 }
 
+void logRaw(std::string logLevel, std::string message, const std::map<std::string, std::string> headers, String *value)
+{
+  waitForWifi();
+
+  std::string logUrl = logEndpoint() + "/tm/libs/log/raw";
+
+  HttpClientRequest request(logUrl);
+
+  for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it)
+  {
+    request.addHeader("log-" + it->first, it->second);
+  }
+  request.addHeader("log-message", message);
+  request.addHeader("log-Severity", logLevel);
+  request.addHeader("log-application", getDeviceKey().c_str());
+  request.addHeader("log-ip", getDeviceIp());
+
+  request.txtBody(value);
+  // Serial.println(("log request:" + request.body).c_str());
+  request.callback = logResponse;
+  request.send();
+}
+
 void logData(std::string logLevel, std::string message, const std::map<std::string, std::string> data)
 {
 
@@ -40,8 +63,8 @@ void logData(std::string logLevel, std::string message, const std::map<std::stri
   HttpClientRequest request(logUrl);
   std::string json_data = stringify(obj);
 
-  request.body = base64_encode(json_data);
-  Serial.println(("log request:" + request.body).c_str());
+  request.body = new String(base64_encode(json_data).c_str());
+  // Serial.println(("log request:" + request.body).c_str());
   request.callback = logResponse;
   request.send();
 }
@@ -63,7 +86,7 @@ void negativeResponseLogger(HttpClientRequest *request, int code, std::string da
                                           {"application", getDeviceKey()},
                                           {"requrl", request->url},
                                           {"code", String(code).c_str()},
-                                          {"reqbody", request->body},
+                                          {"reqbody", request->body->c_str()},
                                           {"response_data", data}});
   }
 }

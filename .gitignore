@@ -5,3 +5,4 @@ node_modules
 c/.vscode/c_cpp_properties.json
 platformio-shared-lib/ClonedLibrary/filewatcher/__pycache__
 twatchs3/TTGO_TWatch_Library-t-watch-s3/*
+gpio-passthorugh/gpio-passthrough/python/ui/__pycache__

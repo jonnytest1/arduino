@@ -11,6 +11,7 @@ struct WifiCallback
 };
 
 void waitForWifi();
+std::string getHostname();
 std::string getDeviceIp();
 WifiCallback wifi_cb_ref();
 

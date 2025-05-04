@@ -1,89 +1,195 @@
-/*
-  LiquidCrystal Library - display() and noDisplay()
+#define PIN_NEOPIXEL 14
+#include <FastLED.h>
 
- Demonstrates the use a 16x2 LCD display.  The LiquidCrystal
- library works with all LCD displays that are compatible with the
- Hitachi HD44780 driver. There are many of them out there, and you
- can usually tell them by the 16-pin interface.
+#define NUM_LEDS 64
+#define DATA_PIN 14
+#define LED_TYPE WS2812B
 
- This sketch prints "Hello World!" to the LCD and uses the
- display() and noDisplay() functions to turn on and off
- the display.
+#define RGB_ORDER RGB // Change this to match your strip (GRB, BRG, etc.)
 
- The circuit:
- * LCD RS pin to digital pin 12
- * LCD Enable pin to digital pin 11
- * LCD D4 pin to digital pin 5
- * LCD D5 pin to digital pin 4
- * LCD D6 pin to digital pin 3
- * LCD D7 pin to digital pin 2
- * LCD R/W pin to ground
- * 10K resistor:
- * ends to +5V and ground
- * wiper to LCD VO pin (pin 3)
+CRGB leds[NUM_LEDS];
 
- Library originally added 18 Apr 2008
- by David A. Mellis
- library modified 5 Jul 2009
- by Limor Fried (http://www.ladyada.net)
- example added 9 Jul 2009
- by Tom Igoe
- modified 22 Nov 2010
- by Tom Igoe
- modified 7 Nov 2016
- by Arturo Guadalupi
+uint8_t end_byte = 255;
 
- This example code is in the public domain.
-
- http://www.arduino.cc/en/Tutorial/LiquidCrystalDisplay
-
-*/
-
-// include the library code:
-#include <LiquidCrystal.h>
-
-// initialize the library by associating any needed LCD interface pin
-// with the arduino pin number it is connected to
-const int rs = 4, en = 6, d4 = 10, d5 = 11, d6 = 12, d7 = 13;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-
-int index=0;
-
-void setup() {
-  // set up the LCD's number of columns and rows:
-  
-  // Print a message to the LCD.
-  
-  lcd.autoscroll();
-  //lcd.print("helloworld!");
-  //lcd.print("abc!");
- lcd.display();
-
+const uint8_t numberIndices[10][25] = {
+    // Number 0
+    {8, 9, 10, 11, 12, 13, 14, 15, 23, 31, 39, 47, 55, 54, 53, 52, 51, 50, 49, 48, 40, 32, 24, 16, end_byte}, // 0
+    // Number 1
+    {28, 37, 46, 45, 44, 43, 42, 41, 40, end_byte}, // 1
+    // Number 2
+    {21, 30, 38, 45, 44, 35, 26, 17, 16, 24, 32, 40, end_byte}, // 2
+    // Number 3
+    {30, 38, 45, 44, 35, 27, 42, 41, 32, 24, end_byte}, // 3
+    // Number 4
+    {39, 47, 30, 29, 20, 19, 27, 35, 43, 51, 46, 45, 44, 42, 41, end_byte}, // 4
+    // Number 5
+    {23, 31, 39, 47, 22, 21, 20, 28, 36, 43, 42, 33, 25, end_byte}, // 5
+    // Number 6
+    {47, 39, 30, 21, 20, 19, 18, 25, 33, 42, 43, 36, 28, end_byte}, // 6
+    // Number 7
+    {23, 31, 39, 47, 46, 37, 36, 27, 26, end_byte}, // 7
+    // Number 8
+    {31, 39, 22, 46, 21, 45, 28, 36, 19, 43, 18, 42, 25, 33, end_byte}, // 8
+    // Number 9
+    {31, 39, 22, 46, 21, 45, 28, 36, 44, 43, 42, 33, 25, 17, end_byte}, // 9
+};
+void setup()
+{
+  // No need to initialize the RGB LED
+  FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
+  delay(500);
 }
 
-void loop() {
-  // lcd.home();
-  // print from 0 to 9:
- // for (int thisChar = 0; thisChar < 10; thisChar++) {
-  //  lcd.print(thisChar);
-  //  delay(500);
-  //}
-  for (int thisChar = 0; thisChar < 10; thisChar++) {
-    lcd.print(thisChar);
-    delay(500);
-  }
-  // set the cursor to (16,1):
-  //lcd.setCursor(16, 1);
-  // set the display to automatically scroll:
- 
-  // print from 0 to 9:
-  for (int thisChar = 0; thisChar < 10; thisChar++) {
-    lcd.print(thisChar);
-    delay(500);
-  }
-  // turn off automatic scrolling
-  //lcd.noAutoscroll();
+void singleDigit(int num, CRGB color)
+{
+  const uint8_t *digitChars = numberIndices[num];
 
-  // clear screen for the next loop:
-  //lcd.clear();
+  int size = 0;
+  while (digitChars[size] != end_byte || size == 0)
+  {
+    int index = digitChars[size];
+    leds[index] = color;
+    size++;
+  }
+  FastLED.show();
+}
+
+void clear()
+{
+  for (int i = 0; i < 64; i++)
+  {
+    leds[i] = CRGB::Black;
+  }
+}
+
+void bitBlock(int ten1, CRGB color, int offset)
+{
+
+  if (ten1 > 0)
+  {
+    leds[4 + offset] = color;
+  }
+  if (ten1 > 1)
+  {
+    leds[12 + offset] = color;
+  }
+  if (ten1 > 2)
+  {
+    leds[20 + offset] = color;
+  }
+  if (ten1 > 3)
+  {
+    leds[28 + offset] = color;
+  }
+  if (ten1 > 4)
+  {
+    leds[36 + offset] = color;
+  }
+  if (ten1 > 5)
+  {
+    leds[3 + offset] = color;
+  }
+  if (ten1 > 6)
+  {
+    leds[11 + offset] = color;
+  }
+  if (ten1 > 7)
+  {
+    leds[19 + offset] = color;
+  }
+  if (ten1 > 8)
+  {
+    leds[27 + offset] = color;
+  }
+  if (ten1 > 9)
+  {
+    leds[35 + offset] = color;
+  }
+}
+
+void bitColumn(int ten1, CRGB color)
+{
+  int offset = 0;
+  if (ten1 > 0)
+  {
+    leds[52 + offset] = color;
+  }
+  if (ten1 > 1)
+  {
+    leds[60 + offset] = color;
+  }
+  if (ten1 > 2)
+  {
+    leds[51 + offset] = color;
+  }
+  if (ten1 > 3)
+  {
+    leds[59 + offset] = color;
+  }
+  if (ten1 > 4)
+  {
+    leds[50 + offset] = color;
+  }
+  if (ten1 > 5)
+  {
+    leds[58 + offset] = color;
+  }
+  if (ten1 > 6)
+  {
+    leds[49 + offset] = color;
+  }
+  if (ten1 > 7)
+  {
+    leds[57 + offset] = color;
+  }
+  if (ten1 > 8)
+  {
+    leds[48 + offset] = color;
+  }
+  if (ten1 > 9)
+  {
+    leds[56 + offset] = color;
+  }
+}
+
+void setBitBlock(int multiplikator, int ten1, int ten2, int ten3, int ten4, CRGB color)
+{
+  clear();
+
+  bitBlock(ten1, color, 0);
+  bitBlock(ten2, color, -3);
+  bitBlock(ten3, color, 3);
+
+  bitColumn(ten4, color);
+}
+
+// the loop function runs over and over again forever
+void loop()
+{
+
+  clear();
+  FastLED.setBrightness(10);
+  FastLED.show();
+  delay(500);
+
+  leds[0] = CRGB::Black;
+  FastLED.show();
+  delay(500);
+
+  for (int i = 0; i < 10; i++)
+  {
+    clear();
+    FastLED.show();
+    delay(100);
+    singleDigit(i, CRGB::Red);
+    delay(800);
+  }
+
+  for (int i = 0; i < 11; i++)
+  {
+    clear();
+    setBitBlock(1, i, i, i, i, CRGB::Orange);
+    FastLED.show();
+    delay(800);
+  }
 }

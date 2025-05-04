@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from time import sleep
 workspaceJsonPath = "D:\\Jonathan\\visualstudio-workspaces\\smarthome.code-workspace"
 
 workspaceJsonDirectory = os.path.dirname(workspaceJsonPath)
@@ -60,8 +61,16 @@ def copy_to_workspace(workspaceFolderPath, libDirectory, platformIniStr):
             continue
         if not file.endswith("main.cpp") and not file.endswith("creds.h"):
             fileCurrent = os.path.join(libsLocation, file)
-            shutil.copy(fileCurrent, os.path.join(
-                libDirectory, file))
+            try:
+                shutil.copy(fileCurrent, os.path.join(
+                    libDirectory, file))
+            except PermissionError as e:
+                print(e)
+                sleep(0.5)
+                copy_to_workspace(workspaceFolderPath,
+                                  libDirectory, platformIniStr)
+                return
+
     for file in os.listdir(libsLibLocation):
         if (not is_whitelisted(file)):
             continue

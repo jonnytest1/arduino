@@ -20,10 +20,10 @@ void HttpClientRequest::jsonBody(std::string json)
   std::pair<std::string, std::string> pair("content-type", "application/json");
   headers.insert(pair);
 
-  body = json;
+  body = new String(json.c_str());
 }
 
-void HttpClientRequest::txtBody(std::string txt)
+void HttpClientRequest::txtBody(String *txt)
 {
   addHeader("content-type", "text/plain");
 
@@ -34,19 +34,28 @@ void HttpClientRequest::send()
   waitForWifi();
   HTTPClient httpf;
 
-  Serial.print("reuqest to");
+  Serial.print("reuqest to ");
   Serial.println(url.c_str());
-  httpf.begin(toArduinoString(url.c_str()));
-
-  for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+  if (body != nullptr)
   {
-    httpf.addHeader(toArduinoString(it->first), toArduinoString(it->second));
+    Serial.print("with size ");
+    Serial.println(body->length());
   }
 
-  String reqBody = body.c_str();
-  Serial.println(reqBody);
+  httpf.begin(toArduinoString(url.c_str()));
+  for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+  {
+    // Serial.println("adding header: ");
+    // Serial.println(it->first.c_str());
+    // Serial.println(it->second.c_str());
 
-  int httpCodef = httpf.sendRequest(method.c_str(), reqBody);
+    httpf.addHeader(toArduinoString(it->first), toArduinoString(it->second));
+  }
+  if (body == nullptr)
+  {
+    body = new String();
+  }
+  int httpCodef = httpf.sendRequest(method.c_str(), *body);
 
   if (httpCodef > 0)
   {
@@ -60,7 +69,10 @@ void HttpClientRequest::send()
   }
   else
   {
-    Serial.printf("[HTTP] GET... failed, error: %s\n", httpf.errorToString(httpCodef).c_str());
+
+    Serial.println(WiFi.dnsIP(0));
+    Serial.println(WiFi.dnsIP(1));
+    Serial.printf("[HTTP] request ... failed, error: %s\n", httpf.errorToString(httpCodef).c_str());
   }
   httpf.end();
 }

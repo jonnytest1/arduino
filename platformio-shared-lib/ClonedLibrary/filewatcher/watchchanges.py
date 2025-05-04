@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Coroutine, List, Union
 
 from FileChangeEvent import FileChangeEvent
@@ -15,14 +16,14 @@ observerList: List[Observer] = []
 async def on_file_change(path: str):
     if ".history" in path or path.endswith(".tmp"):
         return
-    print("filechange "+path)
+    print(str(datetime.now().isoformat()) + "filechange "+path)
     copy_all()
 
 
 async def consume(queue: asyncio.Queue):
     async for event in EventIterator(queue):
         evt: FileChangeEvent = event
-        #print("queue item"+evt.path)
+        # print("queue item"+evt.path)
         task = loop.create_task(on_file_change(evt.path))
 
         await task

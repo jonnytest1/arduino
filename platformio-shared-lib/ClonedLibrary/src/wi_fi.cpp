@@ -50,6 +50,7 @@ void waitForWifi()
       t = 0;
     }
   }
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, WiFi.dnsIP(0), IPAddress(192, 168, 178, 1));
   Serial.println("WiFi connected.");
   String ip = WiFi.localIP().toString();
   localIp = ip.c_str();
@@ -59,4 +60,10 @@ void waitForWifi()
 std::string getDeviceIp()
 {
   return localIp;
+}
+
+std::string getHostname()
+{
+  return WiFi.getHostname();
+  ;
 }

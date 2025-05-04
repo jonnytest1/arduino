@@ -5,6 +5,9 @@
 #include "log.h"
 #include "prop.h"
 #include <list>
+#include <ArduinoOTA.h>
+#include "uuid.h"
+#include "wi_fi.h"
 
 struct PendingAction
 {
@@ -113,6 +116,11 @@ String SmartHome::onRequest(HttpRequest *client)
   }
   else
   {
+    if (fallbackRequestHandler == nullptr)
+    {
+      client->responseStatus = 404;
+      return "handler not found";
+    }
     return fallbackRequestHandler(client).c_str();
   }
 
@@ -130,43 +138,64 @@ void SmartHome::init()
 {
   server.begin();
 };
+
+void SmartHome::ota()
+
+{
+  otaEnabled = true;
+  std::string otaPassword = generateUuid();
+  ArduinoOTA.setHostname(("esp32-" + getDeviceKey() + "_ota").c_str());
+  ArduinoOTA.setPassword(otaPassword.c_str());
+  ArduinoOTA.begin();
+  logData("INFO", "startup log", {
+                                     {"application", getDeviceKey().c_str()},
+                                     {"otaPassword", otaPassword},
+                                     {"hostname", getHostname().c_str()},
+                                     {"ip", getDeviceIp().c_str()},
+                                 });
+};
+
 void SmartHome::registerReceiver()
 
 {
-  JsonNode node = getReceiverConfig();
-
-  auto actions = node.objectContent.find("actions");
-  if (actions != node.objectContent.end())
+  if (getReceiverConfig != nullptr)
   {
-    auto actionNode = actions->second;
-    for (std::vector<JsonNode>::iterator it = actionNode.arrayContent.begin(); it != actionNode.arrayContent.end(); ++it)
+
+    JsonNode node = getReceiverConfig();
+
+    auto actions = node.objectContent.find("actions");
+    if (actions != node.objectContent.end())
     {
-      auto name = it->objectContent.at("name").textValue;
-      ActionConfig cfg = ActionConfig();
-      auto confirmEl = it->objectContent.find("confirm");
-      if (confirmEl != it->objectContent.end() && confirmEl->second.boolValue == true)
+      auto actionNode = actions->second;
+      for (std::vector<JsonNode>::iterator it = actionNode.arrayContent.begin(); it != actionNode.arrayContent.end(); ++it)
       {
-        cfg.confirm = true;
+        auto name = it->objectContent.at("name").textValue;
+        ActionConfig cfg = ActionConfig();
+        auto confirmEl = it->objectContent.find("confirm");
+        if (confirmEl != it->objectContent.end() && confirmEl->second.boolValue == true)
+        {
+          cfg.confirm = true;
+        }
+        std::pair<std::string, ActionConfig> cfgpair(name, cfg);
+        actionConfig.insert(cfgpair);
       }
-      std::pair<std::string, ActionConfig> cfgpair(name, cfg);
-      actionConfig.insert(cfgpair);
     }
+
+    std::pair<std::string, JsonNode> pairDevKey("deviceKey", JsonFactory::str(getDeviceKey()));
+    node.objectContent.insert(pairDevKey);
+
+    std::pair<std::string, JsonNode> pairPort("port", JsonFactory::str(String(80).c_str()));
+    node.objectContent.insert(pairPort);
+    std::pair<std::string, JsonNode> pairType("type", JsonFactory::str("http"));
+    node.objectContent.insert(pairType);
+
+    std::string receiverUrl = serverEndpoint() + "/rest/receiver";
+    HttpClientRequest request(receiverUrl);
+    request.jsonBody(stringify(node));
+    request.callback = negativeResponseLogger;
+    Serial.println("sending reuqest");
+    request.send();
   }
-
-  std::pair<std::string, JsonNode> pairDevKey("deviceKey", JsonFactory::str(getDeviceKey()));
-  node.objectContent.insert(pairDevKey);
-
-  std::pair<std::string, JsonNode> pairPort("port", JsonFactory::str(String(80).c_str()));
-  node.objectContent.insert(pairPort);
-  std::pair<std::string, JsonNode> pairType("type", JsonFactory::str("http"));
-  node.objectContent.insert(pairType);
-
-  std::string receiverUrl = serverEndpoint() + "/nodets/rest/receiver";
-  HttpClientRequest request(receiverUrl);
-  request.jsonBody(stringify(node));
-  request.callback = negativeResponseLogger;
-  Serial.println("sending reuqest");
-  request.send();
 };
 
 void SmartHome::registerAction(std::string name, std::function<void(SmartHome *)> actionCallbackRef, bool confirm)
@@ -196,13 +225,13 @@ void SmartHome::stepPendingActions()
 
     if (secondsA < seconds)
     {
-      Serial.print(secondsA);
-      Serial.print(" remaining for action: ");
-      Serial.println(it->name.c_str());
+      // Serial.print(secondsA);
+      // Serial.print(" remaining for action: ");
+      // Serial.println(it->name.c_str());
     }
     if (it->remaining_millis < 0)
     {
-      Serial.println("triggering timed out");
+      Serial.println(String("triggering pending action ") + it->name.c_str());
       it->callback();
       pendingActions.erase(it);
       return;
@@ -222,9 +251,53 @@ void SmartHome::next(std::function<void()> callback)
 
   pendingActions.push_back(action);
 }
+
+void SmartHome::triggerSenderEvent(std::string name, JsonNode data)
+{
+  std::pair<std::string, JsonNode> pairDevKey("deviceKey", JsonFactory::str(getDeviceKey()));
+  data.objectContent.insert(pairDevKey);
+
+  std::pair<std::string, JsonNode> messageKey("message", JsonFactory::str(name));
+  data.objectContent.insert(messageKey);
+
+  std::string receiverUrl = serverEndpoint() + "/rest/sender/trigger";
+  HttpClientRequest request(receiverUrl);
+
+  request.jsonBody(stringify(data));
+  request.callback = negativeResponseLogger;
+  Serial.println("sending reuqest");
+  request.send();
+}
+
+void SmartHome::registerSender()
+{
+
+  if (getSenderConfig == nullptr)
+  {
+    return;
+  }
+
+  JsonNode node = getSenderConfig();
+  std::pair<std::string, JsonNode> pairDevKey("deviceKey", JsonFactory::str(getDeviceKey()));
+  node.objectContent.insert(pairDevKey);
+
+  std::string receiverUrl = serverEndpoint() + "/rest/sender";
+  HttpClientRequest request(receiverUrl);
+
+  request.jsonBody(stringify(node));
+  request.callback = negativeResponseLogger;
+  Serial.println("sending reuqest");
+  request.send();
+}
+
 void SmartHome::step()
 
 {
+  if (otaEnabled)
+  {
+    ArduinoOTA.handle();
+  }
+
   if (stepCt % 100 == 0)
   {
     // Serial.print("free heap:");
@@ -234,6 +307,11 @@ void SmartHome::step()
   {
     registerReceiver();
     hasRegisteredReceiver = true;
+  }
+  if (!hasRegisteredSender)
+  {
+    registerSender();
+    hasRegisteredSender = true;
   }
   server.step();
 
@@ -246,6 +324,11 @@ void SmartHome::step()
 
 void SmartHome::updateState(JsonNode state)
 {
+  if (getReceiverConfig == nullptr)
+  {
+    return;
+  }
+
   Serial.println("update state");
   HttpClientRequest request(serverEndpoint() + "/nodets/rest/receiver/state");
   request.jsonBody(stringify(JsonFactory::obj({
