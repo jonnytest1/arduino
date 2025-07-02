@@ -4,6 +4,7 @@
 #include "esp_heap_caps.h"
 #include "joystick.h"
 #include "page.h"
+#include "page_ina266.h"
 #include "page_serial.h"
 #include "page_time.h"
 #include "tftSetup.h"
@@ -29,7 +30,10 @@ unsigned int colour = red << 11; // Colour order is RGB 5+6+5 bits each
 Pages pages(&esp32Input.stick, &tft);
 
 SerialDraw sDraw(&esp32Input);
-TimePage timePage(&Wire1);
+
+TwoWire *masterI2c = &Wire1;
+TimePage timePage(masterI2c);
+Ina266PAge ina266page(masterI2c);
 
 void rainbow_fill()
 {
@@ -185,6 +189,15 @@ void setup()
     esp32Input.stick.y_up.on<bool>(BoolChangeRef::TRUE_EVENT, [](bool val) { ESP_LOGI(L_TAG, "stick y_up"); });
     esp32Input.stick.y_down.on<bool>(BoolChangeRef::TRUE_EVENT, [](bool val) { ESP_LOGI(L_TAG, "stick y_down"); });
 
+    esp32Input.stick_left.x_right.on<bool>(BoolChangeRef::TRUE_EVENT,
+                                           [](bool val) { ESP_LOGI(L_TAG, "stick left x_right"); });
+    esp32Input.stick_left.x_left.on<bool>(BoolChangeRef::TRUE_EVENT,
+                                          [](bool val) { ESP_LOGI(L_TAG, "stick left x_left"); });
+    esp32Input.stick_left.y_up.on<bool>(BoolChangeRef::TRUE_EVENT,
+                                        [](bool val) { ESP_LOGI(L_TAG, "stick left y_up"); });
+    esp32Input.stick_left.y_down.on<bool>(BoolChangeRef::TRUE_EVENT,
+                                          [](bool val) { ESP_LOGI(L_TAG, "stick left y_down"); });
+
     ESP_LOGI(L_TAG, "heap %d", esp_get_free_heap_size());
 
     ESP_LOGI(L_TAG, "tft begin");
@@ -197,12 +210,16 @@ void setup()
     tft.setTextSize(1);
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
     tft.setTextDatum(TL_DATUM);
+
+    masterI2c->setTimeout(50);
+    masterI2c->begin(20, 21);
     timePage.setup();
     timePage.targetTime = millis() + 1000;
     ESP_LOGI(L_TAG, "setting pages ...");
     pages.set(0, 0, &timePage);
     pages.set(0, 1, new CallbackPage(rainbow_fill));
     pages.set(1, 0, &sDraw);
+    pages.set(1, 1, &ina266page);
     pages_map->createSprite(tft.width() - 24, tft.height() - 24);
     pages_map->setTextSize(1);
     pages_map->setTextColor(TFT_YELLOW, TFT_BLACK);

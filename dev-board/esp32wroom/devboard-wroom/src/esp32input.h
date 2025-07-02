@@ -20,14 +20,18 @@ class Esp32Input : public EventEmitter
     bool goti2c = false;
 
     Joystick stick;
+    Joystick stick_left;
     /**
      *  stickx default 126
      *  sticky default 125
      *  stickPress default 1
      *  switch mask1
      *  switch mask2
+     *  sticky2 default 110
+     *  stickx2 default 110
+     *  stickPress2
      */
-    uint8_t dataWrite[5];
+    uint8_t dataWrite[8];
     uint8_t led_control[3] = {0, 0, 0};
 
     unsigned long last_received = -1;
@@ -68,7 +72,8 @@ class Esp32Input : public EventEmitter
 
     void setup()
     {
-        stick.deadZone = 70;
+        stick.deadZone = 80;
+        stick_left.deadZone = 80;
 
         top2Rows.on<BitChanged>(Bitmask::BitChangedEvent,
                                 [this](BitChanged evt) { emit(topRowEvents[evt.index], evt.currentValue); });
@@ -85,7 +90,7 @@ class Esp32Input : public EventEmitter
                 goti2c = true;
             }
 
-            for (int i = 0; i < std::min(bytesCt, 5); i++)
+            for (int i = 0; i < std::min(bytesCt, 8); i++)
             {
                 char c = i2cinput->read();
 
@@ -124,6 +129,8 @@ class Esp32Input : public EventEmitter
             // ESP_LOGI(L_TAG, "i2c begin esp");
             // }
             stick.update(dataWrite[1] + 10, 255 - dataWrite[0] - 20);
+            // ESP_LOGI(L_TAG, "joystick %d %d", 255 - dataWrite[6] - 12, dataWrite[5] + 12);
+            stick_left.update(255 - dataWrite[6] - 12, dataWrite[5] + 12);
         });
 
         i2cinput->onRequest([this]() { i2cinput->write(1); });

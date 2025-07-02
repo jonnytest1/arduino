@@ -60,8 +60,7 @@ class TimePage : public Page
 
     void setup()
     {
-        i2c->setTimeout(50);
-        i2c->begin(20, 21);
+        
         beginRtc();
         if (rtcFailed)
         {

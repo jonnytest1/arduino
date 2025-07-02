@@ -9,12 +9,19 @@
  * 2 joypress
  * 3 button r1 r2
  * 4 button r3 r4
+ * 5 joy2x
+ * 6 joy2y
+ * 7 joy2pressed
  */
-uint8_t dataWrite[5]; // define array used to save the write data
+uint8_t dataWrite[8]; // define array used to save the write data
 // pin
 const int joystickXPin = A4, // 35 define pin for direction X of joystick
     joystickYPin = A5,       // 32 define pin for direction Y of joystick
     joystickZPin = 25;       // 33 define pin for direction Z of joystick
+
+const int joystick2XPin = 36, //
+    joystick2YPin = 39,       //
+    joystick2ZPin = 21;
 
 const int rows[4] = {15, 2, 4, 16};  // Row pins
 const int cols[4] = {17, 5, 18, 19}; // Column pins
@@ -26,7 +33,8 @@ void setup()
     Serial.println("start serial");
 
     // pin
-    pinMode(joystickZPin, INPUT); // set led1Pin to input mode
+    pinMode(joystickZPin, INPUT);  // set led1Pin to input mode
+    pinMode(joystick2ZPin, INPUT); // set led1Pin to input mode
     Serial.println("joystick setup");
     // pinMode(s1Pin, INPUT);        // set s1Pin to input mode
     // pinMode(s2Pin, INPUT);        // set s2Pin to input mode
@@ -93,6 +101,8 @@ bool readButtons()
     return changed;
 }
 
+unsigned long lastPrint = -1;
+
 void loop()
 {
 
@@ -105,19 +115,33 @@ void loop()
     {
         changed = true;
     }
-
+    uint8_t joystick2X = map(analogRead(joystick2XPin), 0, 4095, 0, 255);
+    uint8_t joystick2Y = map(analogRead(joystick2YPin), 0, 4095, 0, 255);
+    uint8_t j2Z = digitalRead(joystick2ZPin);
+    if (joystick2X != dataWrite[5] || joystick2Y != dataWrite[6] || j2Z != dataWrite[7])
+    {
+        changed = true;
+    }
     dataWrite[0] = joystickX;
     dataWrite[1] = joystickY;
     dataWrite[2] = jZ;
-    for (int c : dataWrite)
+    dataWrite[5] = joystick2X;
+    dataWrite[6] = joystick2Y;
+    dataWrite[7] = j2Z;
+
+    if (millis() - lastPrint > 1000)
     {
-        for (int i = 7; i >= 0; i--)
+        lastPrint = millis();
+        for (int c : dataWrite)
         {
-            Serial.print((c >> i) & 1);
+            for (int i = 7; i >= 0; i--)
+            {
+                Serial.print((c >> i) & 1);
+            }
+            Serial.print(",");
         }
-        Serial.print(",");
+        Serial.println(" - state");
     }
-    Serial.println(" - state");
 
     if (changed || reconnected)
     {

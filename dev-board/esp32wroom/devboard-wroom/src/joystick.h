@@ -71,7 +71,7 @@ class Joystick
     {
         x = x - 126;
         y = y - 125;
-        ESP_LOGI(L_TAG, "joystick %d %d", x, y);
+        // ESP_LOGI(L_TAG, "joystick %d %d", x, y);
 
         if (x != last_x)
         {
